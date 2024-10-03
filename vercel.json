@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/proxy/dict-leo-org/:path*",
+      "destination": "https://dict.leo.org/:path*"
+    },
+    {
+      "source": "/proxy/dict-leo-org/:path*/",
+      "destination": "https://dict.leo.org/:path*/"
+    }
+  ]
+}
