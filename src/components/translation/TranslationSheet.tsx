@@ -1,5 +1,5 @@
-import { motion } from "framer-motion";
 import React from "react";
+import { Sheet, SheetRef } from "react-modal-sheet";
 import { useScrollLock } from "usehooks-ts";
 import {
   TranslationCategory,
@@ -27,10 +27,10 @@ export default function TranslationSheet({
 
   const [currentKey, setCurrentKey] = React.useState<number>(0);
   const [isOpen, setOpen] = React.useState<boolean>(false);
+  const [contentHeight, setContentHeight] = React.useState<number>(0);
 
   const contentRef = React.useRef<HTMLDivElement>(null);
-
-  const [contentHeight, setContentHeight] = React.useState<number>(0);
+  const sheetRef = React.useRef<SheetRef>(null);
 
   const categories = React.useMemo(
     () =>
@@ -62,47 +62,65 @@ export default function TranslationSheet({
     setOpen(translations.isFetched);
   }, [translations.isFetched]);
 
+  React.useEffect(() => {
+    if (translations.isFetched) {
+      sheetRef.current?.snapTo(isOpen ? 0 : 1);
+    }
+  }, [isOpen, translations.isFetched]);
+
   return (
-    <motion.div
-      className={cn("flex flex-col rounded-t-xl border-t bg-white", className)}
-      animate={isOpen ? "open" : "closed"}
-      variants={{
-        open: { y: 0 },
-        closed: { y: contentHeight },
-      }}
-      transition={{ bounce: 0, ease: "easeInOut" }}
+    <Sheet
+      isOpen={true}
+      disableScrollLocking={true}
+      snapPoints={[Math.max(contentHeight, 40), 40]}
+      onSnap={(index) => setOpen(index === 0)}
+      onClose={() => {}}
+      ref={sheetRef}
     >
-      <button
-        className="flex flex-col items-center py-4"
-        onClick={() => setOpen((isOpen) => !isOpen)}
-      >
-        <div className="h-1.5 w-8 rounded-full bg-gray-500" />
-      </button>
-      <div ref={contentRef}>
-        {categories[currentKey] ? (
-          <>
-            <TabGroup
-              texts={categories.map((item) => item.text)}
-              currentKey={currentKey}
-              onChange={setCurrentKey}
-            />
-            <div className="h-[50vh] overflow-y-auto px-2 py-4">
-              {translations.isSuccess ? (
-                <TranslationTable
-                  title={categories[currentKey].text}
-                  translations={
-                    translations.data[categories[currentKey].category]
-                  }
-                />
-              ) : null}
-            </div>
-          </>
-        ) : (
-          <div className="px-4 py-16 text-center font-semibold">
-            No se encontraron resultados para "{search}"
-          </div>
+      <Sheet.Container
+        className={cn(
+          "flex flex-col rounded-t-xl border-t bg-white",
+          className,
         )}
-      </div>
-    </motion.div>
+      >
+        <Sheet.Header className="flex flex-col items-center">
+          <div
+            className="cursor-pointer p-4"
+            onClick={() => setOpen((isOpen) => !isOpen)}
+          >
+            <div className="h-1.5 w-8 rounded-full bg-gray-500" />
+          </div>
+        </Sheet.Header>
+        <Sheet.Content>
+          <div ref={contentRef}>
+            {categories[currentKey] ? (
+              <>
+                <TabGroup
+                  texts={categories.map((item) => item.text)}
+                  currentKey={currentKey}
+                  onChange={setCurrentKey}
+                />
+                <div className="h-[50vh] overflow-y-auto px-2 py-4">
+                  {translations.isSuccess ? (
+                    <TranslationTable
+                      title={categories[currentKey].text}
+                      translations={
+                        translations.data[categories[currentKey].category]
+                      }
+                    />
+                  ) : null}
+                </div>
+              </>
+            ) : (
+              <div className="px-4 py-16 text-center font-semibold">
+                {search
+                  ? `No se encontraron resultados para "${search.slice(50)[0]}"`
+                  : "Selecciona una palabra para traducir"}
+              </div>
+            )}
+          </div>
+        </Sheet.Content>
+      </Sheet.Container>
+    </Sheet>
   );
 }

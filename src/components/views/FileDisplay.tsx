@@ -38,11 +38,8 @@ export default function FileDisplay({ file }: FileDisplayProps) {
   useEventListener(
     "selectionchange",
     () => {
-      const selection = getSelection();
-      const selectedText = selection?.toString().trim();
-      if (selection && selectedText) {
-        setSelectedText(selectedText);
-      }
+      const selectedText = getSelection()?.toString().trim();
+      setSelectedText(selectedText ?? null);
     },
     documentRef,
   );
